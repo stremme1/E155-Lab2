@@ -51,7 +51,7 @@ module Lab1_ES (
 
 
 
-    // --- LED[2]: Blink at 100 Hz ---
+    // --- Segments to Switch at 100 Hz ---
     localparam int HALF_PERIOD = 60_000; // for 12 MHz input clock
     logic [23:0] divcnt = 0;
     logic        blink_state = 0;
@@ -66,9 +66,6 @@ module Lab1_ES (
     end
 
     assign select = blink_state;
-
-
-
 
 
 
