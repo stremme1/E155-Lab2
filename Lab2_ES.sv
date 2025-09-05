@@ -4,7 +4,7 @@
 
 
 module Lab2_ES (
-    input  logic        clk, reset,    
+    input  logic        reset,    
     input  logic [3:0]  s0,
     input  logic [3:0]  s1,      
     output logic [6:0]  seg,    // Multiplexed seven-segment signal
@@ -12,6 +12,12 @@ module Lab2_ES (
     output logic        select0,
     output logic        select1  // Power multiplexing control (PNP transistor control)
 );
+
+	logic clk;
+
+ // Internal high-speed oscillator
+   HSOSC #(.CLKHF_DIV(2'b01)) 
+         hf_osc (.CLKHFPU(1'b1), .CLKHFEN(1'b1), .CLKHF(clk));
 
     // Internal signals
     logic [4:0] sum;
@@ -48,8 +54,6 @@ module Lab2_ES (
     assign led = sum;      // LEDs show sum of s0 + s1
 
 
-
-
     // --- Power Multiplexing at 100 Hz ---
     // This controls which display is powered on
     localparam int HALF_PERIOD = 60_000; // for 12 MHz input clock
@@ -57,7 +61,7 @@ module Lab2_ES (
     logic        display_select = 0;     // Main multiplexing control signal
 
     always_ff @(posedge clk) begin
-        if (reset == 1) begin            // Active high reset
+        if (reset == 0) begin            // Active high reset
             divcnt <= 0;
             display_select <= 0;
         end else if (divcnt == HALF_PERIOD - 1) begin
