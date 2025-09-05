@@ -4,7 +4,7 @@
 
 
 module Lab2_ES (
-    input  logic        clk,    
+    input  logic        clk, reset,    
     input  logic [3:0]  s0,
     input  logic [3:0]  s1,      
     output logic [6:0]  seg,    // Multiplexed seven-segment signal
@@ -57,6 +57,10 @@ module Lab2_ES (
     logic        display_select = 0;
 
     always_ff @(posedge clk) begin
+		if (reset == 0) begin
+			divcnt <= 0;
+			display_select <= 0;
+		end
         if (divcnt == HALF_PERIOD - 1) begin
             divcnt <= 0;
             display_select <= ~display_select; // toggle between displays
