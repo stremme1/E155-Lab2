@@ -1,44 +1,43 @@
 // Emmett Stralka estralka@hmc.edu
 // 09/03/25
-// Testbench for MUX2 module
+// Testbench for five_bit_adder module
 
-module MUX2_tb();
-    logic [6:0] d0, d1, y, y_expected;
-    logic select;
+module five_bit_adder_tb();
+    logic [3:0] s1, s2;
+    logic [4:0] sum, sum_expected;
     logic [31:0] vectornum, errors;
-    logic [21:0] testvectors[1000:0]; // d0(7) + d1(7) + select(1) + y_expected(7) = 22 bits
+    logic [12:0] testvectors[1000:0]; // s1(4) + s2(4) + sum_expected(5) = 13 bits
 
     // Instantiate device under test
-    MUX2 dut(
-        d0,
-        d1,
-        select,
-        y
+    five_bit_adder dut(
+        s1,
+        s2,
+        sum
     );
     
     // Load test vectors and initialize
     initial begin
-        $readmemb("MUX2.tv", testvectors);
+        $readmemb("five_bit_adder.tv", testvectors);
         vectornum = 0; errors = 0;
     end
     
     // Apply test vectors on rising edge
     always begin
         #10; // Wait for clock edge simulation
-        {d0, d1, select, y_expected} = testvectors[vectornum];
+        {s1, s2, sum_expected} = testvectors[vectornum];
     end
     
     // Check results on falling edge
     always begin
         #5; // Wait for propagation
-        if (y !== y_expected) begin
-            $display("Error at vector %0d: d0=%b d1=%b select=%b | y out %b expected %b", 
-                      vectornum, d0, d1, select, y, y_expected);
+        if (sum !== sum_expected) begin
+            $display("Error at vector %0d: s1=%b s2=%b | sum out %b expected %b", 
+                      vectornum, s1, s2, sum, sum_expected);
             errors = errors + 1;
         end
         
         vectornum = vectornum + 1;
-        if (testvectors[vectornum] === 22'bx) begin
+        if (testvectors[vectornum] === 13'bx) begin
             $display("%d tests completed with %d errors", vectornum, errors);
             $stop;
         end
