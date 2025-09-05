@@ -54,7 +54,8 @@ module Lab2_ES (
     // This controls which display is powered on
     localparam int HALF_PERIOD = 60_000; // for 12 MHz input clock
     logic [23:0] divcnt = 0;
-    logic        display_select = 0;
+    logic        display_select0 = 0;
+	logic        display_select0 = 1;
 
     always_ff @(posedge clk) begin
 		if (reset == 0) begin
@@ -63,7 +64,8 @@ module Lab2_ES (
 		end
         if (divcnt == HALF_PERIOD - 1) begin
             divcnt <= 0;
-            display_select <= ~display_select; // toggle between displays
+            display_select0 <= ~display_select; // toggle between displays
+			display_select1 <= ~display_select;
         end else begin
             divcnt <= divcnt + 1;
         end
@@ -73,7 +75,7 @@ module Lab2_ES (
     // select0 = 0: Display 1 (s0) PNP resistor is ON, Display 2 (s1) PNP resistor is OFF
     // select0 = 1: Display 1 (s0) PNP resistor is OFF, Display 2 (s1) PNP resistor is ON
     assign select0 = display_select;      // Controls PNP for Display 1 (s0)
-    assign select1 = ~display_select;     // Controls PNP for Display 2 (s1) - opposite phase
+    assign select1 = display_select;     // Controls PNP for Display 2 (s1) - opposite phase
 
 
 
