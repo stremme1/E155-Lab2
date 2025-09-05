@@ -9,9 +9,9 @@ module Lab2_ES_tb();
     logic [3:0] s0, s1;
     logic [6:0] seg, seg_expected;
     logic [4:0] led, led_expected;
-    logic select;
+    logic select0, select1;
     logic [31:0] vectornum, errors;
-    logic [32:0] testvectors[10000:0]; // Size for: s0(4) + s1(4) + seg_expected(7) + select(1) + led(5) + led_expected(5) = 26 bits
+    logic [33:0] testvectors[10000:0]; // Size for: s0(4) + s1(4) + seg_expected(7) + select0(1) + select1(1) + led(5) + led_expected(5) = 28 bits
 
     // Instantiate device under test
     Lab2_ES dut(
@@ -20,7 +20,8 @@ module Lab2_ES_tb();
         s1,
         seg,
         led,
-        select
+        select0,
+        select1
     );
     
     // Generate clock (12 MHz - same as main design input clock)
@@ -52,8 +53,8 @@ module Lab2_ES_tb();
     // Apply test vectors on rising edge of 100 Hz test clock
     always @(posedge test_clk) begin
         if (!reset) begin
-            // Test vector format: {s0[3:0], s1[3:0], seg_expected[6:0], select, led[4:0], led_expected[4:0]}
-            {s0, s1, seg_expected, select, led, led_expected} = testvectors[vectornum];
+            // Test vector format: {s0[3:0], s1[3:0], seg_expected[6:0], select0, select1, led[4:0], led_expected[4:0]}
+            {s0, s1, seg_expected, select0, select1, led, led_expected} = testvectors[vectornum];
         end
     end
     
@@ -69,13 +70,20 @@ module Lab2_ES_tb();
             
             // Check seven-segment output (multiplexed)
             if (seg !== seg_expected) begin
-                $display("Error at vector %0d: s0=%b s1=%b select=%b | seg out %b expected %b", 
-                          vectornum, s0, s1, select, seg, seg_expected);
+                $display("Error at vector %0d: s0=%b s1=%b select0=%b select1=%b | seg out %b expected %b", 
+                          vectornum, s0, s1, select0, select1, seg, seg_expected);
+                errors = errors + 1;
+            end
+            
+            // Check PNP control signals (phase relationship)
+            if (select0 === select1) begin
+                $display("Error at vector %0d: select0 and select1 should be opposite phases! select0=%b select1=%b", 
+                          vectornum, select0, select1);
                 errors = errors + 1;
             end
             
             vectornum = vectornum + 1;
-            if (testvectors[vectornum] === 33'bx) begin
+            if (testvectors[vectornum] === 34'bx) begin
                 $display("%d tests completed with %d errors", vectornum, errors);
                 $stop;
             end

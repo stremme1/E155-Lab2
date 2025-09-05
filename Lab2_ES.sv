@@ -9,7 +9,8 @@ module Lab2_ES (
     input  logic [3:0]  s1,      
     output logic [6:0]  seg,    // Multiplexed seven-segment signal
     output logic [4:0]  led,    // LEDs show sum of s0 + s1
-    output logic        select  // Power multiplexing control (PNP transistor control)
+    output logic        select0,
+    output logic        select1  // Power multiplexing control (PNP transistor control)
 );
 
     // Internal signals
@@ -32,7 +33,7 @@ module Lab2_ES (
     MUX2 signal_mux (
         seg0_internal,  // d0: first display segments
         seg1_internal,  // d1: second display segments
-        select,         // sel: multiplexing control
+        display_select, // sel: multiplexing control
         seg             // y: multiplexed output to both displays
     );
 
@@ -64,10 +65,11 @@ module Lab2_ES (
         end
     end
 
-    // Power multiplexing control
-    // select = 0: Display 1 (s0) is powered on
-    // select = 1: Display 2 (s1) is powered on
-    assign select = display_select;
+    // Power multiplexing control for PNP resistors
+    // select0 = 0: Display 1 (s0) PNP resistor is ON, Display 2 (s1) PNP resistor is OFF
+    // select0 = 1: Display 1 (s0) PNP resistor is OFF, Display 2 (s1) PNP resistor is ON
+    assign select0 = display_select;      // Controls PNP for Display 1 (s0)
+    assign select1 = ~display_select;     // Controls PNP for Display 2 (s1) - opposite phase
 
 
 
