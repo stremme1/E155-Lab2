@@ -76,7 +76,7 @@ module Lab2_ES (
     // select0 = 0: Display 1 (s0) PNP resistor is ON, Display 2 (s1) PNP resistor is OFF
     // select0 = 1: Display 1 (s0) PNP resistor is OFF, Display 2 (s1) PNP resistor is ON
     assign select0 = display_select;      // Controls PNP for Display 1 (s0)
-    assign select1 = ~display_select;     // Controls PNP for Display 2 (s1) - opposite phase
+    assign select1 = ~display_select;     // Controls PNP for Display 2 (s1) - opposite phasel
 
 
 
