@@ -1,5 +1,5 @@
-// Test vectors for Lab2_ES with proper select0/select1 phase relationship
-// Format: s0_s1_seg_expected_select0_select1_led_led_expected
+// Test vectors for Lab2ES with proper select0/select1 phase relationship
+// Format: s0s1segexpectedselect0select1ledledexpected
 // Complete test coverage: all combinations from 0+0 to F+F
 
 // s0=0 combinations
@@ -547,4 +547,4 @@
 1111_1111_0001110_1_0_11110_11110
 
 // End marker
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxx

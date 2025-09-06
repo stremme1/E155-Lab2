@@ -18,6 +18,16 @@ module five_bit_adder_tb();
     // Load test vectors and initialize
     initial begin
         $readmemb("five_bit_adder.tv", testvectors);
+        // Strip underscores from test vectors for processing
+        for (int i = 0; i < 1000; i++) begin
+            if (testvectors[i] !== 13'bx) begin
+                // Convert to string, remove underscores, convert back to binary
+                string tv_str;
+                $sformat(tv_str, "%b", testvectors[i]);
+                tv_str = tv_str.replace("_", "");
+                testvectors[i] = tv_str.atoi();
+            end
+        end
         vectornum = 0; errors = 0;
     end
     

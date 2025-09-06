@@ -11,7 +11,7 @@ module Lab2_ES_tb();
     logic [4:0] led, led_expected;
     logic select0, select1;
     logic [31:0] vectornum, errors;
-    logic [33:0] testvectors[10000:0]; // Size for: s0(4) + s1(4) + seg_expected(7) + select0(1) + select1(1) + led(5) + led_expected(5) = 28 bits
+    logic [26:0] testvectors[10000:0]; // Size for: s0(4) + s1(4) + seg_expected(7) + select0(1) + select1(1) + led(5) + led_expected(5) = 27 bits
 
     // Instantiate device under test
     Lab2_ES dut(
@@ -46,6 +46,16 @@ module Lab2_ES_tb();
     // Load test vectors and initialize
     initial begin
         $readmemb("Lab2_ES_tb.tv", testvectors);
+        // Strip underscores from test vectors for processing
+        for (int i = 0; i < 10000; i++) begin
+            if (testvectors[i] !== 27'bx) begin
+                // Convert to string, remove underscores, convert back to binary
+                string tv_str;
+                $sformat(tv_str, "%b", testvectors[i]);
+                tv_str = tv_str.replace("_", "");
+                testvectors[i] = tv_str.atoi();
+            end
+        end
         vectornum = 0; errors = 0;
         reset = 1; #22; reset = 0;
     end
@@ -83,7 +93,7 @@ module Lab2_ES_tb();
             end
             
             vectornum = vectornum + 1;
-            if (testvectors[vectornum] === 34'bx) begin
+            if (testvectors[vectornum] === 27'bx) begin
                 $display("%d tests completed with %d errors", vectornum, errors);
                 $stop;
             end
