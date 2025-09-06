@@ -21,15 +21,12 @@ module five_bit_adder_tb();
         vectornum = 0; errors = 0;
     end
     
-    // Apply test vectors on rising edge
+    // Apply test vectors and check results
     always begin
-        #10; // Wait for clock edge simulation
+        #10; // Wait for propagation
         {s1, s2, sum_expected} = testvectors[vectornum];
-    end
-    
-    // Check results on falling edge
-    always begin
-        #5; // Wait for propagation
+        
+        #5; // Wait for additional propagation
         if (sum !== sum_expected) begin
             $display("Error at vector %0d: s1=%b s2=%b | sum out %b expected %b", 
                       vectornum, s1, s2, sum, sum_expected);
