@@ -22,15 +22,12 @@ module MUX2_tb();
         vectornum = 0; errors = 0;
     end
     
-    // Apply test vectors on rising edge
+    // Apply test vectors and check results
     always begin
-        #10; // Wait for clock edge simulation
+        #10; // Wait for propagation
         {d0, d1, select, y_expected} = testvectors[vectornum];
-    end
-    
-    // Check results on falling edge
-    always begin
-        #5; // Wait for propagation
+        
+        #5; // Wait for additional propagation
         if (y !== y_expected) begin
             $display("Error at vector %0d: d0=%b d1=%b select=%b | y out %b expected %b", 
                       vectornum, d0, d1, select, y, y_expected);
