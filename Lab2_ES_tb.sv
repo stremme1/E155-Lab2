@@ -45,19 +45,8 @@ module Lab2_ES_tb();
     
     // Load test vectors and initialize
     initial begin
-        $readmemb("Lab2_ES_tb.tv", testvectors);
-        // Strip underscores from test vectors for processing
-        for (int i = 0; i < 10000; i++) begin
-            if (testvectors[i] !== 27'bx) begin
-                // Convert to string, remove underscores, convert back to binary
-                string tv_str;
-                $sformat(tv_str, "%b", testvectors[i]);
-                tv_str = tv_str.replace("_", "");
-                testvectors[i] = tv_str.atoi();
-            end
-        end
+        $readmemb("Lab2_ES.tv", testvectors);
         vectornum = 0; errors = 0;
-        reset = 1; #22; reset = 0;
     end
     
     // Apply test vectors on rising edge of 100 Hz test clock
