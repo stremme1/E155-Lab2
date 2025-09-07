@@ -10,27 +10,26 @@ module MUX2_tb();
 
     // Instantiate device under test
     MUX2 dut(
-        d0,
-        d1,
-        select,
-        y
+        .d0(d0),
+        .d1(d1),
+        .select(select),
+        .y(y)
     );
 
-	    // Load test vectors and initialize
+    // Load test vectors and initialize
     initial begin
         $readmemb("MUX2.tv", testvectors);
         vectornum = 0; errors = 0;
     end
     
-    
     // Apply test vectors and check results
     always begin
         #10; // Wait for propagation
-        {d0, d1, select, y, y_expected} = testvectors[vectornum];
+        {d0, d1, select, y_expected} = testvectors[vectornum];
         
         #5; // Wait for additional propagation
         if (y !== y_expected) begin
-            $display("Error at vector %0d: s1=%b s2=%b | sum out %b expected %b", 
+            $display("Error at vector %0d: d0=%b d1=%b select=%b | output %b expected %b", 
                       vectornum, d0, d1, select, y, y_expected);
             errors = errors + 1;
         end
@@ -38,7 +37,7 @@ module MUX2_tb();
         vectornum = vectornum + 1;
         if (testvectors[vectornum] === 22'bx) begin
             $display("%d tests completed with %d errors", vectornum, errors);
-            $stop;
+            $finish;
         end
     end
 endmodule
