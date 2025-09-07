@@ -46,3 +46,26 @@ module Lab2_ES_tb();
 
 	
 endmodule
+
+module clockisolation(
+     input logic reset, clk,
+	 output logic clk_signal);
+	//Lab1 starter code: Blink at 2.4Hz
+
+   logic [23:0] counter; //initializing counter
+  
+   // Counter
+   always_ff @(posedge clk, negedge reset) begin
+     if(reset == 0) begin
+		 counter <= 0;
+		 clk_signal <= 0;
+	 end else begin           
+		 if(counter == 23'd1_999)begin  //5M cycles to flip the LED
+			 counter <= 0;
+			 clk_signal <= ~clk_signal; //flip the LED
+		 end else begin
+			counter <= counter + 1;
+		 end
+		 end
+     end 
+Endmodule
