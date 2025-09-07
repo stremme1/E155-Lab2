@@ -15,31 +15,22 @@ module MUX2_tb();
         select,
         y
     );
-    
-    // Load test vectors and initialize
+
+	    // Load test vectors and initialize
     initial begin
         $readmemb("MUX2.tv", testvectors);
-        // Strip underscores from test vectors for processing
-        for (int i = 0; i < 1000; i++) begin
-            if (testvectors[i] !== 22'bx) begin
-                // Convert to string, remove underscores, convert back to binary
-                string tv_str;
-                $sformat(tv_str, "%b", testvectors[i]);
-                tv_str = tv_str.replace("_", "");
-                testvectors[i] = tv_str.atoi();
-            end
-        end
         vectornum = 0; errors = 0;
     end
+    
     
     // Apply test vectors and check results
     always begin
         #10; // Wait for propagation
-        {d0, d1, select, y_expected} = testvectors[vectornum];
+        {d0, d1, select, y, y_expected} = testvectors[vectornum];
         
         #5; // Wait for additional propagation
         if (y !== y_expected) begin
-            $display("Error at vector %0d: d0=%b d1=%b select=%b | y out %b expected %b", 
+            $display("Error at vector %0d: s1=%b s2=%b | sum out %b expected %b", 
                       vectornum, d0, d1, select, y, y_expected);
             errors = errors + 1;
         end
