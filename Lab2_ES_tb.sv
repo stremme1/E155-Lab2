@@ -1,77 +1,54 @@
 // Emmett Stralka estralka@hmc.edu
 // 09/03/25
-// Testbench for Lab2_ES module
+// TESTBENCH2=CLK: Clock testbench for Lab2_ES module
+
 
 module Lab2_ES_tb();
-    logic clk, reset;
+    logic reset, clk;
     logic [3:0] s0, s1;
     logic [6:0] seg, seg_expected;
     logic [4:0] led, led_expected;
     logic select0, select1;
-    logic [31:0] vectornum, errors;
-    logic [26:0] testvectors[10000:0]; // Size for: s0(4) + s1(4) + seg_expected(7) + select0(1) + select1(1) + led(5) + led_expected(5) = 27 bits
-
+    logic [23:0] counter; //initializing counter
+  
     // Instantiate device under test
-    Lab2_ES dut(
-        .clk(clk),
-        .reset(reset),
-        .s0(s0),
-        .s1(s1),
-        .seg(seg),
-        .led(led),
-        .select0(select0),
-        .select1(select1)
-    );
+    Lab2_ES dut(reset, clk, s0, s1, seg, led, select0, select1);
     
-    // Generate clock (12 MHz - same as main design input clock)
+    // Generate clock
     always begin
-        clk = 1; #41.67; clk = 0; #41.67; // 12 MHz = 83.33ns period, 41.67ns half period
+        clk = 1; #41.67; 
+        clk = 0; #41.67;
+    end
+	
+    initial begin
+        reset = 0; 
+        s0 = 4'b0000;
+        s1 = 4'b0000;
+        #100; 
+        reset = 1;
     end
 
-    // Load test vectors and initialize
-    initial begin
-        $readmemb("Lab2_ES_tb.tv", testvectors);
-        vectornum = 0; errors = 0;
-        reset = 1;
-        #100; // Hold reset for a few clock cycles
-        reset = 0;
+    always_ff @(posedge clk, negedge reset) begin
+        if(reset == 0) begin
+            counter <= 0;
+            seg_expected <= 7'b1000000;
+            led_expected <= 5'b00000;
+        end else begin           
+            if(counter == 23'd1_999) begin  //5M cycles to flip the LED
+                counter <= 0;
+                seg_expected <= ~seg_expected; //flip the segment
+                led_expected <= ~led_expected; //flip the LED
+            end else begin
+                counter <= counter + 1;
+            end
+        end 
+    end 
+	
+    always_ff @(*) begin
+        // Apply test vectors on rising edge
+        assert (seg == seg_expected) else $error("Assertion failed seg: %b %b", seg, seg_expected);
+        assert (led == led_expected) else $error("Assertion failed led: %b %b", led, led_expected);
+        assert (select0 !== select1) else $error("Assertion failed select signals: %b %b", select0, select1);
     end
-    
-    // Apply test vectors and check results
-    always @(posedge clk) begin
-        if (!reset) begin
-            // Test vector format: {s0[3:0], s1[3:0], seg_expected[6:0], select0, select1, led[4:0], led_expected[4:0]}
-            {s0, s1, seg_expected, select0, select1, led_expected} = testvectors[vectornum];
-            
-            // Wait for propagation
-            #1;
-            
-            // Check LED output
-            if (led !== led_expected) begin
-                $display("Error at vector %0d: s0=%b s1=%b | led out %b expected %b", 
-                          vectornum, s0, s1, led, led_expected);
-                errors = errors + 1;
-            end
-            
-            // Check seven-segment output
-            if (seg !== seg_expected) begin
-                $display("Error at vector %0d: s0=%b s1=%b | seg out %b expected %b", 
-                          vectornum, s0, s1, seg, seg_expected);
-                errors = errors + 1;
-            end
-            
-            // Check PNP control signals (should be complementary)
-            if (select0 === select1) begin
-                $display("Error at vector %0d: select0 and select1 should be complementary! select0=%b select1=%b", 
-                          vectornum, select0, select1);
-                errors = errors + 1;
-            end
-            
-            vectornum = vectornum + 1;
-            if (testvectors[vectornum] === 27'bx) begin
-                $display("%d tests completed with %d errors", vectornum, errors);
-                $finish;
-            end
-        end
-    end
+
 endmodule
