@@ -30,7 +30,7 @@ module Lab2_ES_tb();
 
     // Load test vectors and initialize
     initial begin
-        $readmemb("Lab2_ES.tv", testvectors);
+        $readmemb("Lab2_ES_tb.tv", testvectors);
         vectornum = 0; errors = 0;
         reset = 1;
         #100; // Hold reset for a few clock cycles
@@ -41,7 +41,7 @@ module Lab2_ES_tb();
     always @(posedge clk) begin
         if (!reset) begin
             // Test vector format: {s0[3:0], s1[3:0], seg_expected[6:0], select0, select1, led[4:0], led_expected[4:0]}
-            {s0, s1, seg_expected, select0, select1, led, led_expected} = testvectors[vectornum];
+            {s0, s1, seg_expected, led_expected} = testvectors[vectornum];
             
             // Wait for propagation
             #1;
