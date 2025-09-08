@@ -1,73 +1,123 @@
 // Emmett Stralka estralka@hmc.edu
 // 09/03/25
-// Testbench for Lab2_ES module: Tests clock generation and power multiplexing functionality
+// Testbench for Lab2_ES module: Tests select0 and select1 muxing signals with clock optimization
+
 
 module Lab2_ES_tb();
     // Test signals
-    logic reset, clk;                      // Reset and clock signals
-    logic clk_signal, clk_signal_expected; // Actual and expected clock output
-    logic [23:0] counter;                  // Counter for clock division 
-  
-    // Instantiate device under test
-    justclk dut(reset, clk, clk_signal);
+    logic clk;                             // Test clock
+    logic reset;                           // Reset signal
+    logic [3:0] s0, s1;                   // Input numbers
+    logic [6:0] seg;                      // Seven-segment output
+    logic [4:0] led;                      // LED output
+    logic select0, select1;               // Power multiplexing signals (what we're testing)
     
-    // Generate test clock (approximately 24 kHz)
+    // Test control signals
+    logic test_passed = 1'b1;             // Overall test result
+    integer error_count = 0;              // Error counter
+    
+    // Generate test clock (fast enough to see multiplexing)
     always begin
-        clk = 1; #20830;  // Clock high for half period
-        clk = 0; #20830;  // Clock low for half period
+        clk = 1; #5;  // 100 MHz clock
+        clk = 0; #5;
     end
     
-    // Initialize reset sequence
+    // Instantiate device under test
+    Lab2_ES dut(
+        .clk(clk),
+        .reset(reset),
+        .s0(s0),
+        .s1(s1),
+        .seg(seg),
+        .led(led),
+        .select0(select0),
+        .select1(select1)
+    );
+    
+    // Initialize test sequence
     initial begin
+        $display("=== Lab2_ES Testbench Starting ===");
+        $display("Testing select0 and select1 muxing signals with clock optimization");
+        
+        // Initialize all signals
         reset = 0;        // Start with reset asserted
-        #23830            // Wait for initial setup
+        s0 = 4'b0000;     // Initialize inputs
+        s1 = 4'b0000;
+        
+        // Release reset after a few clock cycles
+        repeat(5) @(posedge clk);
         reset = 1;        // Release reset
+        $display("Reset released at time %t", $time);
+        
+        // Wait for first select signal transition to establish baseline
+        @(posedge select0 or posedge select1);
+        $display("First select0 value: %b, select1: %b at time %t", select0, select1, $time);
+        
+        // Test different input combinations
+        repeat(1000) @(posedge clk);  // Wait for several multiplexing cycles
+        s0 = 4'b0101;     // Test with 5
+        s1 = 4'b1010;     // Test with 10
+        $display("Changed inputs: s0=%b, s1=%b at time %t", s0, s1, $time);
+        
+        repeat(1000) @(posedge clk);  // Wait for several multiplexing cycles
+        s0 = 4'b1111;     // Test with 15
+        s1 = 4'b1111;     // Test with 15
+        $display("Changed inputs: s0=%b, s1=%b at time %t", s0, s1, $time);
+        
+        repeat(1000) @(posedge clk);  // Final observation period
+        
+        // Test completion
+        if (test_passed && error_count == 0) begin
+            $display("=== TEST PASSED ===");
+            $display("All select signal tests completed successfully");
+        end else begin
+            $display("=== TEST FAILED ===");
+            $display("Error count: %d", error_count);
+        end
+        
+        $finish;
     end
-
-    // Expected behavior model for verification
-    always_ff @(posedge clk, negedge reset) begin
-        if(reset == 0) begin
-            counter <= 0;
-            clk_signal_expected <= 0;
-        end else begin           
-            if(counter == 23'd1_999) begin  // 2000 cycles to toggle the output
-                counter <= 0;
-                clk_signal_expected <= ~clk_signal_expected; // Toggle the output
-            end else begin
-                counter <= counter + 1;
-            end
-        end 
-    end 
     
-    // Continuous assertion checking
-    always_ff @(*) begin
-        // Verify that actual output matches expected output
-        assert (clk_signal == clk_signal_expected) else $error("Assertion failed clk_signal: %b %b", clk_signal, clk_signal_expected);
+    // Monitor select signal transitions for optimization analysis
+    always @(posedge select0 or negedge select0) begin
+        if (select0 !== 1'bx) begin  // Only log when signal is driven
+            $display("Time %t: select0 transition to %b, select1=%b", $time, select0, select1);
+        end
     end
-
-endmodule
-
-module justclk(
-    input logic reset, clk,     // Reset and clock inputs
-    output logic clk_signal     // Output clock signal
-);
-    // Clock divider module: Divides input clock to create slower output signal
-    // Based on Lab1 starter code: Blink at 2.4Hz
-
-    logic [23:0] counter;       // Counter for clock division
-  
-    // Clock divider: Counts input clock cycles and toggles output
-    always_ff @(posedge clk, negedge reset) begin
-        if(reset == 0) begin
-            counter <= 0;
-            clk_signal <= 0;
-        end else begin           
-            if(counter == 23'd1_999) begin  // 2000 cycles to toggle output
-                counter <= 0;
-                clk_signal <= ~clk_signal; // Toggle the output signal
-            end else begin
-                counter <= counter + 1;    // Increment counter
+    
+    always @(posedge select1 or negedge select1) begin
+        if (select1 !== 1'bx) begin  // Only log when signal is driven
+            $display("Time %t: select1 transition to %b, select0=%b", $time, select1, select0);
+        end
+    end
+    
+    // Continuous assertion checking for select signals (combinational)
+    always @(*) begin
+        if (select0 !== 1'bx && select1 !== 1'bx) begin  // Only check when signals are driven
+            // Verify select0 and select1 are always opposite (180-degree phase shift)
+            if (select0 !== ~select1) begin
+                $error("Phase relationship error: select0=%b, select1=%b (should be opposite)", select0, select1);
+                error_count = error_count + 1;
+                test_passed = 1'b0;
             end
         end
-    end 
+    end
+    
+    // Monitor for any X or Z values on select signals
+    always @(select0, select1) begin
+        if (select0 === 1'bx || select0 === 1'bz) begin
+            $warning("select0 has invalid value: %b at time %t", select0, $time);
+        end
+        if (select1 === 1'bx || select1 === 1'bz) begin
+            $warning("select1 has invalid value: %b at time %t", select1, $time);
+        end
+    end
+    
+    // Monitor LED output for basic functionality
+    always @(led) begin
+        if (led !== 5'bx) begin
+            $display("LED output: %b (sum of s0=%b + s1=%b) at time %t", led, s0, s1, $time);
+        end
+    end
+
 endmodule
