@@ -1,6 +1,6 @@
 // Emmett Stralka estralka@hmc.edu
 // 09/03/25
-// Testbench for Lab2_ES module: Tests select0 and select1 muxing signals with clock optimization
+// Testbench for Lab2_ES module: Tests ONLY select0 and select1 multiplexing behavior
 
 
 module Lab2_ES_tb();
@@ -36,8 +36,8 @@ module Lab2_ES_tb();
     
     // Initialize test sequence
     initial begin
-        $display("=== Lab2_ES Testbench Starting ===");
-        $display("Testing select0 and select1 muxing signals with clock optimization");
+        $display("=== Lab2_ES Multiplexing Testbench Starting ===");
+        $display("Testing ONLY select0 and select1 multiplexing behavior");
         
         // Initialize all signals
         reset = 0;        // Start with reset asserted
@@ -68,10 +68,10 @@ module Lab2_ES_tb();
         
         // Test completion
         if (test_passed && error_count == 0) begin
-            $display("=== TEST PASSED ===");
-            $display("All select signal tests completed successfully");
+            $display("=== MULTIPLEXING TEST PASSED ===");
+            $display("All select0/select1 multiplexing tests completed successfully");
         end else begin
-            $display("=== TEST FAILED ===");
+            $display("=== MULTIPLEXING TEST FAILED ===");
             $display("Error count: %d", error_count);
         end
         
@@ -113,11 +113,5 @@ module Lab2_ES_tb();
         end
     end
     
-    // Monitor LED output for basic functionality
-    always @(led) begin
-        if (led !== 5'bx) begin
-            $display("LED output: %b (sum of s0=%b + s1=%b) at time %t", led, s0, s1, $time);
-        end
-    end
 
 endmodule
