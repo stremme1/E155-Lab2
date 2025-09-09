@@ -14,26 +14,26 @@ module Lab2_ES (
 
     // Internal signals
     logic [4:0] sum;                    // 5-bit sum from adder (s0 + s1)
-    logic [6:0] seg0_internal, seg1_internal;  // Seven-segment patterns for each display
+    logic [3:0] muxed_input;            // Multiplexed input to seven-segment decoder
     logic display_select;               // Current display selection (0 or 1)
-    logic [23:0] divcnt;                // Clock divider counter for multiplexing
+    logic clk;                          // Internal high-speed oscillator clock
 
-    // Seven-segment display decoders for each input number
-    seven_segment seven_segment0 (
-        .num(s0),              // Input: first 4-bit number
-        .seg(seg0_internal)    // Output: 7-segment pattern for s0
-    );
-    seven_segment seven_segment1 (
-        .num(s1),              // Input: second 4-bit number
-        .seg(seg1_internal)    // Output: 7-segment pattern for s1
-    );
+    // Internal high-speed oscillator
+    HSOSC #(.CLKHF_DIV(2'b01)) 
+          hf_osc (.CLKHFPU(1'b1), .CLKHFEN(1'b1), .CLKHF(clk));
 
-    // 2-to-1 multiplexer for time-multiplexing the seven-segment displays
-    MUX2 signal_mux (
-        .d0(seg0_internal),    // Input: seven-segment pattern for s0
-        .d1(seg1_internal),    // Input: seven-segment pattern for s1
+    // 2-to-1 multiplexer for input selection to seven-segment decoder
+    MUX2 input_mux (
+        .d0(s0),               // Input: first 4-bit number
+        .d1(s1),               // Input: second 4-bit number
         .select(display_select), // Select signal (0 = s0, 1 = s1)
-        .y(seg)                // Output: multiplexed seven-segment signal
+        .y(muxed_input)        // Output: multiplexed 4-bit input
+    );
+
+    // seven-segment display decoder
+    seven_segment seven_segment_decoder (
+        .num(muxed_input),     // Input: multiplexed 4-bit number
+        .seg(seg)              // Output: 7-segment pattern
     );
 
     // Five-bit adder to compute sum for LED display
@@ -46,20 +46,12 @@ module Lab2_ES (
     // Output assignments
     assign led = sum;      // LEDs display the sum of s0 + s1 (5 bits)
 
-    // --- Power Multiplexing at ~100 Hz ---
-    // This controls which display is powered on to create the illusion of both being on
-    localparam int HALF_PERIOD = 60_000; // Half period for 12 MHz input clock (100 Hz switching)
-
-    // Clock divider for power multiplexing
+    // --- Power Multiplexing at 100 Hz ---
     always_ff @(posedge clk or negedge reset) begin
         if (~reset) begin                    // Async active-low reset
-            divcnt <= 0;
             display_select <= 0;
-        end else if (divcnt == HALF_PERIOD - 1) begin
-            divcnt <= 0;
-            display_select <= ~display_select; // Toggle between displays
         end else begin
-            divcnt <= divcnt + 1;            // Increment counter
+            display_select <= ~display_select; // Toggle between displays
         end
     end
 
