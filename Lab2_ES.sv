@@ -23,12 +23,8 @@ module Lab2_ES (
           hf_osc (.CLKHFPU(1'b1), .CLKHFEN(1'b1), .CLKHF(clk));
 
     // 2-to-1 multiplexer for input selection to seven-segment decoder
-    MUX2 input_mux (
-        .d0(s0),               // Input: first 4-bit number
-        .d1(s1),               // Input: second 4-bit number
-        .select(display_select), // Select signal (0 = s0, 1 = s1)
-        .y(muxed_input)        // Output: multiplexed 4-bit input
-    );
+    // Note: Using direct assignment since MUX2 is designed for 7-bit signals
+    assign muxed_input = display_select ? s1 : s0;
 
     // seven-segment display decoder
     seven_segment seven_segment_decoder (
