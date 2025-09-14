@@ -2,7 +2,6 @@
 // 09/03/25
 // Lab2_ES: Main module implementing a dual seven-segment display system with power multiplexing
 module Lab2_ES (
-    input  logic        clk,      // External clock input
     input  logic        reset,    // Active-low reset signal
     input  logic [3:0]  s0,       // First 4-bit input number
     input  logic [3:0]  s1,       // Second 4-bit input number
@@ -16,11 +15,11 @@ module Lab2_ES (
     logic [4:0] sum;                    // 5-bit sum from adder (s0 + s1)
     logic [3:0] muxed_input;            // Multiplexed input to seven-segment decoder
     logic display_select;               // Current display selection (0 or 1)
-    logic clk;                          // Internal high-speed oscillator clock
+    logic internal_clk;                 // Internal high-speed oscillator clock
 
-    // Internal high-speed oscillator
-    HSOSC #(.CLKHF_DIV(2'b01)) 
-          hf_osc (.CLKHFPU(1'b1), .CLKHFEN(1'b1), .CLKHF(clk));
+    // Internal high-speed oscillator (HSOC)
+    HSOC #(.CLKHF_DIV(2'b01)) 
+         hf_osc (.CLKHFPU(1'b1), .CLKHFEN(1'b1), .CLKHF(internal_clk));
 
     // 2-to-1 multiplexer for input selection to seven-segment decoder
     // Note: Using direct assignment since MUX2 is designed for 7-bit signals
@@ -42,8 +41,8 @@ module Lab2_ES (
     // Output assignments
     assign led = sum;      // LEDs display the sum of s0 + s1 (5 bits)
 
-    // --- Power Multiplexing at 100 Hz ---
-    always_ff @(posedge clk or negedge reset) begin
+    // --- Power Multiplexing at high frequency ---
+    always_ff @(posedge internal_clk or negedge reset) begin
         if (~reset) begin                    // Async active-low reset
             display_select <= 0;
         end else begin
