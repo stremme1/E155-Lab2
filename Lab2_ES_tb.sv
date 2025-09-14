@@ -5,6 +5,7 @@
 
 module Lab2_ES_tb();
     // Test signals
+    logic clk;                             // Test clock (12 MHz)
     logic reset;                           // Reset signal
     logic [3:0] s0, s1;                   // Input numbers
     logic [6:0] seg;                      // Seven-segment output
@@ -15,8 +16,15 @@ module Lab2_ES_tb();
     logic test_passed = 1'b1;             // Overall test result
     integer error_count = 0;              // Error counter
     
-    // Instantiate device under test (no external clock needed - uses internal HSOC)
+    // Generate test clock (12 MHz)
+    always begin
+        clk = 1; #41.67;  // 12 MHz clock (83.33ns period)
+        clk = 0; #41.67;
+    end
+    
+    // Instantiate device under test
     Lab2_ES dut(
+        .clk(clk),
         .reset(reset),
         .s0(s0),
         .s1(s1),
@@ -36,8 +44,8 @@ module Lab2_ES_tb();
         s0 = 4'b0000;     // Initialize inputs
         s1 = 4'b0000;
         
-        // Release reset after a short delay
-        #10;
+        // Release reset after a few clock cycles
+        repeat(5) @(posedge clk);
         reset = 1;        // Release reset
         $display("Reset released at time %t", $time);
         
@@ -46,17 +54,17 @@ module Lab2_ES_tb();
         $display("First select0 value: %b, select1: %b at time %t", select0, select1, $time);
         
         // Test different input combinations
-        #1000;  // Wait for several multiplexing cycles
+        repeat(10000) @(posedge clk);  // Wait for several multiplexing cycles
         s0 = 4'b0101;     // Test with 5
         s1 = 4'b1010;     // Test with 10
         $display("Changed inputs: s0=%b, s1=%b at time %t", s0, s1, $time);
         
-        #1000;  // Wait for several multiplexing cycles
+        repeat(10000) @(posedge clk);  // Wait for several multiplexing cycles
         s0 = 4'b1111;     // Test with 15
         s1 = 4'b1111;     // Test with 15
         $display("Changed inputs: s0=%b, s1=%b at time %t", s0, s1, $time);
         
-        #1000;  // Final observation period
+        repeat(10000) @(posedge clk);  // Final observation period
         
         // Test completion
         if (test_passed && error_count == 0) begin

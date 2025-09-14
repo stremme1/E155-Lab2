@@ -2,6 +2,7 @@
 // 09/03/25
 // Lab2_ES: Main module implementing a dual seven-segment display system with power multiplexing
 module Lab2_ES (
+    input  logic        clk,      // External clock input (12 MHz)
     input  logic        reset,    // Active-low reset signal
     input  logic [3:0]  s0,       // First 4-bit input number
     input  logic [3:0]  s1,       // Second 4-bit input number
@@ -15,11 +16,7 @@ module Lab2_ES (
     logic [4:0] sum;                    // 5-bit sum from adder (s0 + s1)
     logic [3:0] muxed_input;            // Multiplexed input to seven-segment decoder
     logic display_select;               // Current display selection (0 or 1)
-    logic internal_clk;                 // Internal high-speed oscillator clock
-
-    // Internal high-speed oscillator (HSOC)
-    HSOC #(.CLKHF_DIV(2'b01)) 
-         hf_osc (.CLKHFPU(1'b1), .CLKHFEN(1'b1), .CLKHF(internal_clk));
+    logic [22:0] divcnt;                // Clock divider counter
 
     // 2-to-1 multiplexer for input selection to seven-segment decoder
     // Note: Using direct assignment since MUX2 is designed for 7-bit signals
@@ -41,17 +38,38 @@ module Lab2_ES (
     // Output assignments
     assign led = sum;      // LEDs display the sum of s0 + s1 (5 bits)
 
-    // --- Power Multiplexing at high frequency ---
-    always_ff @(posedge internal_clk or negedge reset) begin
-        if (~reset) begin                    // Async active-low reset
+    // --- Power Multiplexing at ~1 kHz ---
+    // This controls which display is powered on to create the illusion of both being on
+    localparam HALF_PERIOD = 6_000;   // Half period for 12 MHz input clock (1 kHz switching - much faster)
+
+    // Clock divider for power multiplexing
+    always @(posedge clk or negedge reset) begin
+        if (~reset) begin              // Async active-low reset
+            divcnt <= 0;
             display_select <= 0;
-        end else begin
+        end else if (divcnt >= HALF_PERIOD - 1) begin
+            divcnt <= 0;
             display_select <= ~display_select; // Toggle between displays
+        end else begin
+            divcnt <= divcnt + 1;      // Increment counter
         end
     end
 
     // Power multiplexing control for PNP transistors
-    assign select0 = display_select;       // Controls PNP for Display 0 (shows s0)
-    assign select1 = ~display_select;      // Controls PNP for Display 1 (shows s1), opposite phase
+    // Use registered outputs to ensure proper phase relationship
+    logic select0_reg, select1_reg;
+    
+    always_ff @(posedge clk or negedge reset) begin
+        if (~reset) begin
+            select0_reg <= 1'b0;
+            select1_reg <= 1'b1;
+        end else begin
+            select0_reg <= display_select;
+            select1_reg <= ~display_select;
+        end
+    end
+    
+    assign select0 = select0_reg;   // Controls PNP for Display 0 (shows s0)
+    assign select1 = select1_reg;   // Controls PNP for Display 1 (shows s1), opposite phase
 
 endmodule
